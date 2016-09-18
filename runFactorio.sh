@@ -33,6 +33,6 @@ echo "*********************************************************"
 
 
 /opt/factorio/bin/x64/factorio --config /opt/factorio/config/config.ini --start-server $save \
-                 --autosave-interval 10 --afk-autokick-interval 2 --allow-commands restrict \
+                 --autosave-interval 10 --afk-autokick-interval 5 --allow-commands restrict \
                  --server-settings /opt/factorio/config/settings.json 
 
