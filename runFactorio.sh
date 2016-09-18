@@ -27,6 +27,10 @@ if [ "$(file -ib $save)" != "application/zip; charset=binary" ]; then
         exit 1
 fi
 
+echo "*********** Your game password is *********"
+grep "game_password" /opt/factorio/config/settings.json
+echo "***********************************"
+
 
 /opt/factorio/bin/x64/factorio --config /opt/factorio/config/config.ini --start-server $save \
                  --autosave-interval 10 --afk-autokick-interval 2 --allow-commands restrict \
