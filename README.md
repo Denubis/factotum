@@ -3,7 +3,8 @@ Scripts for a headless factorio
 By: Brian Ballsun-Stanton
 
 Usage:
-
+* `./headlessFacorio/doIt.sh`
+	* Runs updateFactorio, newMap, newPassword, then Runs it. Presumes that the server details have already been configured, but ideal for starting off a new play session.
 * `./headlessFactorio/updateFactorio.sh`
 	* Downloads and unpacks latest headless experimental factorio build into /opt
 * `./headlessFactorio/newMap.sh`
