@@ -24,6 +24,7 @@ cat > mapsettings.json <<- EOM
   }
 }
 EOM
+fi
 
 
 
