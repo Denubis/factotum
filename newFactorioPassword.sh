@@ -13,11 +13,12 @@ fi
 
 
 if [ "$#" -ne 1 ]; then
-	FACTORIOPASSWORD=$(shuf --random-source /dev/urandom diceware.wordlist.asc | head -n 4 | cut -f 2 | tr '\n' ' ' || true)
+	FACTORIOPASSWORD=$(shuf --random-source /dev/urandom diceware.wordlist.asc | head -n 4 | cut -f 2 | tr '\n' ' ' | sed -e 's/[[:space:]]*$//' || true)
 else
 	FACTORIOPASSWORD=$1	
 fi
 
+echo "/\"game_password\": \".*\"/\"game_password\": \"$FACTORIOPASSWORD\"/"
 sed -i "/\"game_password\": \".*\"/\"game_password\": \"$FACTORIOPASSWORD\"/" /opt/factorio/config/settings.json
 
 echo -e "\n\n***********\n\nYour factorio password is: $FACTORIOPASSWORD"
