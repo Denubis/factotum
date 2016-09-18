@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+
 
 ./headlessFactorio/updateFactorio.sh
 ./headlessFactorio/newMap.sh
