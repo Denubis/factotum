@@ -13,8 +13,8 @@ if [ $? -eq 1 ]; then
     exit 1
 fi
 
-scp $1:/opt/factorio/saves /opt/factorio/saves
-scp $1:/opt/factorio/config /opt/factorio/config
-scp $1:/opt/factorio/mods /opt/factorio/mods
+scp -r $1:/opt/factorio/saves /opt/factorio/saves
+scp -r $1:/opt/factorio/config /opt/factorio/config
+scp -r $1:/opt/factorio/mods /opt/factorio/mods
 scp $1:/opt/factorio/banlist.json /opt/factorio/banlist.json
-scp $1:factorioSave factorioSave
+scp -r $1:factorioSave factorioSave
