@@ -27,9 +27,9 @@ if [ "$(file -ib $save)" != "application/zip; charset=binary" ]; then
         exit 1
 fi
 
-echo "*********** Your game password is *********"
+echo "*********** Your game password is in the quotes *********"
 grep "game_password" /opt/factorio/config/settings.json
-echo "***********************************"
+echo "*********************************************************"
 
 
 /opt/factorio/bin/x64/factorio --config /opt/factorio/config/config.ini --start-server $save \
