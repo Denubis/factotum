@@ -18,7 +18,7 @@ else
 	FACTORIOPASSWORD=$1	
 fi
 
-sed -i 's/"game_password": ".*"/"game_password": "$FACTORIOPASSWORD"/' /opt/factorio/config/settings.json
+sed -i '/"game_password": ".*"/"game_password": "'"$FACTORIOPASSWORD"'"/' /opt/factorio/config/settings.json
 
 echo -e "\n\n***********\n\nYour factorio password is: $FACTORIOPASSWORD"
 
