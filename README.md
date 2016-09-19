@@ -8,7 +8,7 @@ Usage:
 * `./headlessFactorio/updateFactorio.sh`
 	* Downloads and unpacks latest headless experimental factorio build into /opt
 * `./headlessFactorio/newMap.sh`
-	* Creates factorioSave in current directory and makes a map with today's date there.
+	* Creates factorioSave symbolic link to /opt/factorio/saves in current directory and makes a map with today's date there.
 * `./headlessFactorio/runFactorio.sh` `[$1]`
 	* Looks in factorioSave for the latest .zip and runs that, or takes an argument of a save
 * `./headlessFactorio/pullSaves.sh` `<$1>`

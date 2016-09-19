@@ -31,6 +31,8 @@ echo "*********** Your game password is in the quotes *********"
 grep "game_password" /opt/factorio/config/settings.json
 echo "*********************************************************"
 
+numthreads=$(grep -P "processor\t" /proc/cpuinfo | wc -l)
+sed -i -e 's/max_threads=.*/max_threads='"$numthreads/" /opt/factorio/config/config.ini
 
 /opt/factorio/bin/x64/factorio --config /opt/factorio/config/config.ini --start-server $save \
                  --autosave-interval 10 --afk-autokick-interval 5 --allow-commands restrict \

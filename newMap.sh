@@ -26,8 +26,19 @@ cat > mapsettings.json <<- EOM
 EOM
 fi
 
+mkdir -p /opt/factorio/saves
 
 
-mkdir -p factorioSave
-/opt/factorio/bin/x64/factorio --create /home/factorio/factorioSave/$(date +%Y%m%d) --map-gen-settings mapsettings.json
+
+if [ -d factorioSave ]; then
+  echo "... migrating save directory";
+  mv factorioSave/* /opt/factorio/saves/
+  rm -rf factorioSave/
+fi
+
+if [ ! -w factorioSave ]; then 
+  echo "... making symbolic link" 
+  ln -s /opt/factorio/saves factorioSave 
+fi
+/opt/factorio/bin/x64/factorio --create /opt/factorio/saves/$(date +%Y%m%d) --map-gen-settings mapsettings.json
 
