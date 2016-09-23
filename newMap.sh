@@ -30,7 +30,7 @@ mkdir -p /opt/factorio/saves
 
 
 
-if [ -d factorioSave ]; then
+if [ -d factorioSave -a ! -h factorioSave ]; then
   echo "... migrating save directory";
   mv factorioSave/* /opt/factorio/saves/
   rm -rf factorioSave/
