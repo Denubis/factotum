@@ -17,6 +17,6 @@ if [ -w /opt/factorio/mods ]; then
         rm -r /opt/factorio/mods
 fi
 
-gdrive download $1
+./gdrive download $1
 
 7z x -o/opt/factorio/mods "$2"
