@@ -47,7 +47,7 @@ import io
 def cli0(ctx, factoriopath):
 	print(factoriopath)
 
-
+@click.group()
 def cli1():
 	pass
 
