@@ -40,12 +40,7 @@ import codecs
 import ptyprocess
 import io
 
-
-@click.group()
-@click.option('--factoriopath', default="/opt/factorio", help='Default /opt/factorio. Path to install/update factorio and the path of the factorio installation to use.', type=click.Path())
-@click.pass_context
-def cli0(ctx, factoriopath):
-	print(factoriopath)
+FACTORIOPATH = "/opt/factorio"
 
 @click.group()
 def cli1():
@@ -54,11 +49,7 @@ def cli1():
 @cli1.command(cls=DaemonCLI, daemon_params={'pidfile': '/tmp/factorio.pid'})
 @click.option('--serverpassword', help='To set the server password')
 @click.option('--genServerPasswordWords','-g', default=4, help='Default 4. Generate a random password with this many words.')
-
 @click.option('--newMap', help='Create a mapseettings.json file in this directory and generate a new map before launching server.')
-@click.option('--newMapPath', help='Generate a new map when first launched from alternate mapsettings.json.', type=click.File())
-
-#@click.option('--save', help="file and path of the save file to use. Otherwise it will use the most recent save in the saves folder of factorio.", type=click.File())
 def factorio():
     """Factotum for Factorio server stuff. Runs the server. Start with `factorio start`. Help with `factorio --help`."""
     print("hi")
@@ -66,36 +57,33 @@ def factorio():
         time.sleep(10)
 
 @click.group()
-@click.pass_context
-def cli2(ctx):
-
-	print(ctx)
-    
+def cli2():
+	pass
 
 @cli2.command()
-@click.pass_context
 @click.option('--servername', prompt=True,  help="Name of the server for public listings.")
 @click.option('--description', prompt=True, help="Description of the server for public listings.")
 @click.option('--visibility', default="public", help="Default: public. public/lan/hidden")
 @click.option('--tag','-t', help="Tags for the server list.", multiple=True)
 
-def setup(ctx, servername, description, tag, visibility):
+def setup(servername, description, tag, visibility):
 	"""Setup tasks for deploying a server."""
 
-	print(servername, description, [x for x in tag], visibility, ctx.obj)
+	print(servername, description, [str(x) for x in tag], visibility)
 	
-	if os.path.isfile("%s/config/settings.json" % (factoriopath)):
-		with codecs.open("%s/config/settings.json" % (factoriopath), 'r+', encoding='utf-8') as settings_file:
+	try:
+		with codecs.open("%s/config/settings.json" % (FACTORIOPATH), 'r+', encoding='utf-8') as settings_file:
 
 			settingsJson = json.load(settings_file)
 			settingsJson['name'] = servername
 			settingsJson['description'] = description
-			settingsJson['tags'] = [x for xs in tag]
+			settingsJson['tags'] = [str(x) for xs in tag]
 			settingsJson['visibility'] = visibility
 			
 			settings_file.seek(0)
-			json.dump(settingsJson, settings_file, indent=4)
-	else:
+			json.dumps(settingsJson, settings_file, indent=4)
+	except (ValueError, IOError) as e:
+		print(e)
 		updated_settings="""{
   "name": "%s",
   "description": "%s",
@@ -121,8 +109,8 @@ def setup(ctx, servername, description, tag, visibility):
   "_commend_max_upload_in_kilobytes_per_second" : "optional, default value is 0. 0 means unlimited.",
   "max_upload_in_kilobytes_per_second": 0
 }
-""" % (servername, description, [x for x in tag], visibility)
-		with open("%s/config/settings.json" % (factoriopath), 'w') as settings_file:
+""" % (servername, description, "[\"%s\"]" % ('","'.join(tag)), visibility)
+		with open("%s/config/settings.json" % (FACTORIOPATH), 'w') as settings_file:
 			settings_file.write(updated_settings)
 			settings_file.close()
 
@@ -134,11 +122,11 @@ def cli3():
 @click.option('--username', prompt=True,  help="Name of the server for public listings.")
 @click.option('--password', prompt=True, hide_input=True, help="Description of the server for public listings.")
 
-def authenticate(username, password, factoriopath):
+def authenticate(username, password):
 	"""Save an authentication token from factorio"""
 	print("Fetching token for %s" %  (username))
-	if not os.path.isfile("%s/bin/x64/factorio" % (factoriopath) ):
-		print("Could not find factorio at %s" % (factoriopath))
+	if not os.path.isfile("%s/bin/x64/factorio" % (FACTORIOPATH) ):
+		print("Could not find factorio at %s" % (FACTORIOPATH))
 		sys.exit(1)
 	else:
 		settings="""{
@@ -173,27 +161,27 @@ def authenticate(username, password, factoriopath):
 			f.seek(0)
 			#print f.read()
 			print("Settings file: %s" % (f.name))
-			factorio = ptyprocess.PtyProcessUnicode.spawn(["%s/bin/x64/factorio" % (factoriopath), "--start-server-load-latest", "--server-settings", f.name ])
+			factorio = ptyprocess.PtyProcessUnicode.spawn(["%s/bin/x64/factorio" % (FACTORIOPATH), "--start-server-load-latest", "--server-settings", f.name ])
 			
 			time.sleep(5)					
 			factorio.write("/quit\n")
 			
 			
 			
-			with open("%s/player-data.json" % (factoriopath)) as data_file:
+			with open("%s/player-data.json" % (FACTORIOPATH)) as data_file:
 				data = json.load(data_file)
 
 			print(data['service-username'], data['service-token'])
 
 
-			if os.path.isfile("%s/config/settings.json" % (factoriopath)):
-				with codecs.open("%s/config/settings.json" % (factoriopath), 'r+', encoding='utf-8') as settings_file:
+			try:
+				with codecs.open("%s/config/settings.json" % (FACTORIOPATH), 'r+', encoding='utf-8') as settings_file:
 					settingsJson = json.load(settings_file)
-					settingsJson['service-token'] = data['service-token']
-					settingsJson['service-username'] = data['service-username']
+					settingsJson['token'] = data['service-token']
+					settingsJson['username'] = data['service-username']
 					settings_file.seek(0)
 					json.dump(settingsJson, settings_file, indent=4)
-			else:
+			except (ValueError, IOError):
 				updated_settings="""{
   "name": "Name of the game as it will appear in the game listing",
   "description": "Description of the game that will appear in the listing",
@@ -220,7 +208,7 @@ def authenticate(username, password, factoriopath):
   "max_upload_in_kilobytes_per_second": 0
 }
 """ % (data['service-username'], data['service-token'])
-				with open("%s/config/settings.json" % (factoriopath), 'w') as settings_file:
+				with open("%s/config/settings.json" % (FACTORIOPATH), 'w') as settings_file:
 					settings_file.write(updated_settings)
 					settings_file.close()
 
