@@ -8,6 +8,7 @@ pip install --user click ptyprocess clint circus
 ./headlessFactorio/FactoryFactotum install
 ./headlessFactorio/FactoryFactotum authenticate
 ./headlessFactorio/FactoryFactotum setup
+./headlessFactorio/FactoryFactotum newmap
 
 
 
