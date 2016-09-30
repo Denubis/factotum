@@ -225,8 +225,8 @@ def settingsClick():
 	pass
 
 @settingsClick.command()
-@click.option('--servername', help="Name of the server for public listings.")
-@click.option('--description', help="Description of the server for public listings.")
+@click.option('--servername', prompt=True, help="Name of the server for public listings.")
+@click.option('--description', prompt=True,  help="Description of the server for public listings.")
 @click.option('--visibility', default="public", help="Default: public. public/lan/hidden")
 @click.option('--serverpassword', help='To set the server password')
 @click.option('--genServerPasswordWords','-g', default=4, help='Default 4. Generate a random password with this many words.')
@@ -234,7 +234,7 @@ def settingsClick():
 
 def setup(servername, description, tag, visibility, serverpassword, genserverpasswordwords):
 	"""Setup tasks for deploying a server."""
-
+	
 	print(servername, description, [str(x) for x in tag], visibility, serverpassword, genserverpasswordwords)
 	
 	if serverpassword:

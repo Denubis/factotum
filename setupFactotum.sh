@@ -5,5 +5,10 @@ sudo apt-get update && sudo apt-get install libzmq-dev libevent-dev python-dev p
 
 pip install --user click ptyprocess clint circus
  
+./headlessFactorio/FactoryFactotum install
+./headlessFactorio/FactoryFactotum authenticate
+./headlessFactorio/FactoryFactotum setup
+
+
 
 
