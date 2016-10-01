@@ -133,7 +133,7 @@ def updateFactorio():
 	r = requests.get(DOWNLOADURL, stream=True)
 	total_length = int(r.headers.get('content-length'))
 
-	if not os.path.isfile(file_name) and total_length != os.path.getsize(file_name):
+	if not os.path.isfile(file_name) or total_length != os.path.getsize(file_name):
 		with open(file_name, 'wb') as f:
 			for chunk in progress.bar(r.iter_content(chunk_size=1024), expected_size=(total_length/1024) + 1): 
 				if chunk:
@@ -142,14 +142,17 @@ def updateFactorio():
 	else:
 		print("File already exists and file sizes match. Skipping download.")	
 
-	tar = tarfile.open(file_name, "r:gz")
-	tar.extractall(path="/tmp")
-	tar.close()
+	if os.path.isfile(file_name):
+		tar = tarfile.open(file_name, "r:gz")
+		tar.extractall(path="/tmp")
+		tar.close()
 
 
-	for filename in os.listdir("/tmp/factorio"):
-		shutil.move(os.path.join("/tmp/factorio", filename), os.path.join(FACTORIOPATH, filename))
-	
+		for filename in os.listdir("/tmp/factorio"):
+			shutil.move(os.path.join("/tmp/factorio", filename), os.path.join(FACTORIOPATH, filename))
+	else:
+		print("Help! Can't find %s, but I should have!" % (file_name))
+		sys.exit(1)
 
 
 
