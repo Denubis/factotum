@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-from __future__ import print_function
+#!/usr/bin/env python3
 
 '''
 FactoryFactoum -- a CLI for managing the headless linux factorio server
@@ -39,7 +38,6 @@ import json
 import codecs
 import ptyprocess
 import io
-import urllib2
 import requests
 from clint.textui import progress
 import tarfile
@@ -50,38 +48,57 @@ import re
 import random
 from os.path import expanduser
 import circus
+import stat
+from circus import get_arbiter
+import inspect
 
 FACTORIOPATH = "/opt/factorio"
 DOWNLOADURL = "https://www.factorio.com/get-download/latest/headless/linux64"
 
+#http://stackoverflow.com/a/22331852/263449
+def copytree(src, dst, symlinks = False, ignore = None):
+  if not os.path.exists(dst):
+    os.makedirs(dst)
+    shutil.copystat(src, dst)
+  lst = os.listdir(src)
+  if ignore:
+    excl = ignore(src, lst)
+    lst = [x for x in lst if x not in excl]
+  for item in lst:
+    s = os.path.join(src, item)
+    d = os.path.join(dst, item)
+    if symlinks and os.path.islink(s):
+      if os.path.lexists(d):
+        os.remove(d)
+      os.symlink(os.readlink(s), d)
+      try:
+        st = os.lstat(s)
+        mode = stat.S_IMODE(st.st_mode)
+        os.lchmod(d, mode)
+      except:
+        pass # lchmod not available
+    elif os.path.isdir(s):
+      copytree(s, d, symlinks, ignore)
+    else:
+      shutil.copy2(s, d)
 
-try:
-	with open("%s.factorioPath" % (expanduser("~"))) as data_file:
-		FACTORIOPATH = data_file.readline()
-except:
-	print("%s/.factorioPath not found. Using default." % (expanduser("~")))
-	FACTORIOPATH = "/opt/factorio"
-
-
-print("Factorio path: %s" % (FACTORIOPATH))
-
-
-
-try:
-	with codecs.open("%s/config/settings.json" % (FACTORIOPATH), 'r+', encoding='utf-8') as settings_file:
-		settingsJson = json.load(settings_file)
-		print("The server password is: \"%s\" " % settingsJson["game_password"])
-
-except:
-	print("Unable to read settings.json")
-
-__location__ = os.path.realpath(
-    os.path.join(os.getcwd(), os.path.dirname(__file__)))
+#http://stackoverflow.com/a/22881871/263449
+def get_script_dir(follow_symlinks=True):
+    if getattr(sys, 'frozen', False): # py2exe, PyInstaller, cx_Freeze
+        path = os.path.abspath(sys.executable)
+    else:
+        path = inspect.getabsfile(get_script_dir)
+    if follow_symlinks:
+        path = os.path.realpath(path)
+    return os.path.dirname(path)
 
 
 def generatePhrase(numWords):
 	phrase = re.compile("[0-9]+\t(.*)")
 	
+	__location__ = get_script_dir()
+
+	print(__location__)
 
 	with open(os.path.join(__location__, 'diceware.wordlist.asc')) as diceware:
 		password = diceware.readlines()
@@ -117,13 +134,14 @@ def newFactorioMap():
 			mapsettingsfile.close()
 
 
-	factorio1 = ptyprocess.PtyProcessUnicode.spawn(["%s/bin/x64/factorio" % (FACTORIOPATH), "--create", os.path.join(FACTORIOPATH,"saves/", 'Headless-{:%Y%m%d-%H%M%S}'.format(datetime.datetime.now())), "--map-gen-settings", os.path.join(FACTORIOPATH, "config/mapsettings.json") ])
 
-	time.sleep(10)
+	myprogram = {"cmd": "%s/bin/x64/factorio --create %s/%s --map-gen-settings %s/config/mapsettings.json" % (FACTORIOPATH, FACTORIOPATH, 'Headless-{:%Y%m%d-%H%M%S}'.format(datetime.datetime.now()), FACTORIOPATH) , "numprocesses": 1}
 
-	with codecs.open("%s/factorio-current.log" % (FACTORIOPATH), 'r+', encoding='utf-8') as log: 
-		for line in log.readline():
-			print(line, end="")
+	arbiter = get_arbiter([myprogram])
+	try:
+	    arbiter.start()
+	finally:
+	    arbiter.stop()
 
 
 def updateFactorio():
@@ -142,17 +160,41 @@ def updateFactorio():
 	else:
 		print("File already exists and file sizes match. Skipping download.")	
 
-	if os.path.isfile(file_name):
+	if os.path.isfile(file_name) and os.access(FACTORIOPATH, os.W_OK):
 		tar = tarfile.open(file_name, "r:gz")
 		tar.extractall(path="/tmp")
 		tar.close()
 
-
-		for filename in os.listdir("/tmp/factorio"):
-			shutil.move(os.path.join("/tmp/factorio", filename), os.path.join(FACTORIOPATH, filename))
+		copytree("/tmp/factorio", FACTORIOPATH)
 	else:
 		print("Help! Can't find %s, but I should have!" % (file_name))
 		sys.exit(1)
+
+
+
+
+
+try:
+	with open("%s.factorioPath" % (expanduser("~"))) as data_file:
+		FACTORIOPATH = data_file.readline()
+except:
+	print("%s/.factorioPath not found. Using default." % (expanduser("~")))
+	FACTORIOPATH = "/opt/factorio"
+
+
+print("Factorio path: %s" % (FACTORIOPATH))
+
+
+
+try:
+	with codecs.open("%s/config/settings.json" % (FACTORIOPATH), 'r+', encoding='utf-8') as settings_file:
+		settingsJson = json.load(settings_file)
+		print("The server password is: \"%s\" " % settingsJson["game_password"])
+
+except:
+	print("Unable to read settings.json")
+
+
 
 
 
@@ -168,9 +210,9 @@ def factorio():
 
 
 
-	from circus import get_arbiter
+	
 
-	myprogram = {"cmd": "%s/bin/x64/factorio --start-server-load-latest --server-settings %s/config/settings.json" % (FACTORIOPATH, FACTORIOPATH) , "numprocesses": 1}
+	myprogram = {"cmd": "%s/bin/x64/factorio --rcon-port 27015 --rcon-password Factorio --start-server-load-latest --server-settings %s/config/settings.json" % (FACTORIOPATH, FACTORIOPATH) , "numprocesses": 1}
 
 	arbiter = get_arbiter([myprogram])
 	try:
@@ -214,7 +256,7 @@ def install():
 	"""Create the FACTORIOPATH directory, then download and unpack factorio.""" 
 	try:
 		if not os.path.isdir("%s" % (FACTORIOPATH) ):
-			os.mkdir(FACTORIOPATH, 0755)
+			os.mkdir(FACTORIOPATH, 0o755)
 			os.mkdir(os.path.join(FACTORIOPATH, "saves"))
 		updateFactorio()
 	except IOError as e:
@@ -268,7 +310,7 @@ def setup(servername, description, tag, visibility, serverpassword, genserverpas
 			json.dump(settingsJson, settings_file, indent=4)
 
 	except (ValueError, IOError) as e:
-		print(e)
+		
 		updated_settings="""{
   "name": "%s",
   "description": "%s",
@@ -341,30 +383,37 @@ def authenticate(username, password):
 }
 """ % (username, password)
 		try:
-			f = tempfile.NamedTemporaryFile()
+			f = tempfile.NamedTemporaryFile(mode='w')
 			f.write(settings)
 			f.seek(0)
 			#print f.read()
 			print("Settings file: %s" % (f.name))
-			factorio1 = ptyprocess.PtyProcessUnicode.spawn(["%s/bin/x64/factorio" % (FACTORIOPATH), "--create", "/opt/factorio/saves/authenticateMap" ])
 
-			time.sleep(10)
+			myprogram = {"cmd": "%s/bin/x64/factorio --create %s/saves/authenticateMap" % (FACTORIOPATH, FACTORIOPATH) , "numprocesses": 1}
 
-			with codecs.open("%s/factorio-current.log" % (FACTORIOPATH), 'r+', encoding='utf-8') as log: 
-				for line in log.readline():
-					print(line, end="")
+			arbiter = get_arbiter([myprogram])
+			try:
+				arbiter.start()
+			finally:
+				arbiter.stop()
+
+
+			print("test")
+
+			
 
 			print("Map made.")
-			factorio2 = ptyprocess.PtyProcessUnicode.spawn(["%s/bin/x64/factorio" % (FACTORIOPATH), "--start-server-load-latest","--until-tick","100","--no-auto-pause", "--server-settings", f.name ])
 			
-			time.sleep(5)
-			
-			factorio2.write("/quit\n")
-			time.sleep(5)				
-			with codecs.open("%s/factorio-current.log" % (FACTORIOPATH), 'r+', encoding='utf-8') as log: 
-				for line in log.readline():
-					print(line, end="")
-			
+			myprogram = {"cmd": "%s/bin/x64/factorio --start-server-load-latest --until-tick 100 --no-auto-pause --server-settings %s" % (FACTORIOPATH, f.name) , "numprocesses": 1}
+
+			arbiter = get_arbiter([myprogram])
+			try:
+				arbiter.start()
+			finally:
+				arbiter.stop()
+
+
+
 			
 			
 			with open("%s/player-data.json" % (FACTORIOPATH)) as data_file:
