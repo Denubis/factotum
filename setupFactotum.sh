@@ -6,7 +6,7 @@ sudo apt-get update && sudo apt-get install -y libzmq-dev libevent-dev python-de
 pip install --user click ptyprocess clint circus daemonocle requests
 
 mkdir -p $HOME/bin
-ln -s $(git rev-parse --show-toplevel)/FactoryFactotum.sh $HOME/bin/FactoryFactotum
+ln -s $(git rev-parse --show-toplevel)/FactoryFactotum.py $HOME/bin/FactoryFactotum
 
 
 FactoryFactotum install
