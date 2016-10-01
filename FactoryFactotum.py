@@ -133,7 +133,7 @@ def updateFactorio():
 	r = requests.get(DOWNLOADURL, stream=True)
 	total_length = int(r.headers.get('content-length'))
 
-	if total_length != os.path.getsize(file_name):
+	if not os.path.isfile(file_name) and total_length != os.path.getsize(file_name):
 		with open(file_name, 'wb') as f:
 			for chunk in progress.bar(r.iter_content(chunk_size=1024), expected_size=(total_length/1024) + 1): 
 				if chunk:
