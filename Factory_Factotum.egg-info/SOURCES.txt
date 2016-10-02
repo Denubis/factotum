@@ -1,7 +1,0 @@
-setup.py
-FactoryFactotum/FactoryFactotum.py
-FactoryFactotum/__init__.py
-Factory_Factotum.egg-info/PKG-INFO
-Factory_Factotum.egg-info/SOURCES.txt
-Factory_Factotum.egg-info/dependency_links.txt
-Factory_Factotum.egg-info/top_level.txt
