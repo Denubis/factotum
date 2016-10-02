@@ -275,7 +275,7 @@ def install():
 			os.mkdir(os.path.join(FACTORIOPATH, "saves"))
 		with open("%s/.bashrc" % (expanduser("~")), "a") as bashrc:
 			bashrc.write("eval \"$(_FACTORYFACTOTUM_COMPLETE=source FactoryFactotum)\"")
-
+			print("You'll want to restart your shell for command autocompletion. Tab is your friend.")
 		updateFactorio()
 	except IOError as e:
 		print("Cannot make %s. Please check permissions. Error %s" % (FACTORIOPATH, e))
