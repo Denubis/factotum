@@ -273,6 +273,9 @@ def install():
 		if not os.path.isdir("%s" % (FACTORIOPATH) ):
 			os.mkdir(FACTORIOPATH, 0o755)
 			os.mkdir(os.path.join(FACTORIOPATH, "saves"))
+		with open("%s/.bashrc" % (expanduser("~")), "a") as bashrc:
+			bashrc.write("eval \"$(_FACTORYFACTOTUM_COMPLETE=source FactoryFactotum)\"")
+
 		updateFactorio()
 	except IOError as e:
 		print("Cannot make %s. Please check permissions. Error %s" % (FACTORIOPATH, e))

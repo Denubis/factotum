@@ -10,13 +10,13 @@ def read(fname):
 
 setup(
     name = "FactoryFactotum",
-    version = "0.0.4",
+    version = "0.0.8",
     author = "Brian Ballsun-Stanton",
     author_email = "factorio@drbbs.org",
     description = ("A tool to control a headless factorio server."),
     license = "GPLv3",
     keywords = "factorio rcon headless",
-    url = "https://pypi.python.org/pypi/FactoryFactotum",
+    url = "https://github.com/Denubis/headlessFactorio",
     packages=['FactoryFactotum'],
     long_description=read('README.md'),
     classifiers=[
