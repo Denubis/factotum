@@ -172,7 +172,7 @@ def getFactorioPath():
 			path = "/opt/factorio"
 		elif os.access("/opt", os.W_OK):
 			path = "/opt/factorio"
-		else
+		else:
 			path = "%s/factorio" % (expanduser("~"))
 	return path
 

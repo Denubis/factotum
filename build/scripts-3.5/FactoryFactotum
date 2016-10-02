@@ -37,8 +37,8 @@ import asyncio
 from factoirc.rcon import RconConnection
 from pkg_resources import resource_filename, Requirement
 import glob
-
-
+import stat
+import mmap
 
 FACTORIOPATH = "/opt/factorio"
 DOWNLOADURL = "https://www.factorio.com/get-download/latest/headless/linux64"
@@ -168,7 +168,12 @@ def getFactorioPath():
 			path = data_file.readline().strip()
 	except:
 		print("%s/.factorioPath not found. Using default." % (expanduser("~")))
-		path = "/opt/factorio"
+		if os.path.isdir("/opt/factorio"):
+			path = "/opt/factorio"
+		elif os.access("/opt", os.W_OK):
+			path = "/opt/factorio"
+		else:
+			path = "%s/factorio" % (expanduser("~"))
 	return path
 
 
@@ -293,9 +298,11 @@ def install():
 		if not os.path.isdir("%s" % (FACTORIOPATH) ):
 			os.mkdir(FACTORIOPATH, 0o755)
 			os.mkdir(os.path.join(FACTORIOPATH, "saves"))
-		with open("%s/.bashrc" % (expanduser("~")), "a") as bashrc:
-			bashrc.write("eval \"$(_FACTORYFACTOTUM_COMPLETE=source FactoryFactotum)\"")
-			print("You'll want to restart your shell for command autocompletion. Tab is your friend.")
+			with open("%s/.bashrc" % (expanduser("~")), "r+") as bashrc:
+				mmap.mmap(file.fileno(), 0, access=mmap.ACCESS_READ) as s:
+				if s.find(b"eval \"$(_FACTORYFACTOTUM_COMPLETE=source FactoryFactotum)\"\n") == -1:
+        			bashrc.write("eval \"$(_FACTORYFACTOTUM_COMPLETE=source FactoryFactotum)\"\n")
+					print("You'll want to restart your shell for command autocompletion. Tab is your friend.")
 		updateFactorio()
 	except IOError as e:
 		print("Cannot make %s. Please check permissions. Error %s" % (FACTORIOPATH, e))
