@@ -36,7 +36,7 @@ import inspect
 import asyncio
 from factoirc.rcon import RconConnection
 from pkg_resources import resource_filename, Requirement
-
+import glob
 
 
 
@@ -45,45 +45,44 @@ DOWNLOADURL = "https://www.factorio.com/get-download/latest/headless/linux64"
 
 #http://stackoverflow.com/a/22331852/263449
 def copytree(src, dst, symlinks = False, ignore = None):
-  if not os.path.exists(dst):
-    os.makedirs(dst)
-    shutil.copystat(src, dst)
-  lst = os.listdir(src)
-  if ignore:
-    excl = ignore(src, lst)
-    lst = [x for x in lst if x not in excl]
-  for item in lst:
-    s = os.path.join(src, item)
-    d = os.path.join(dst, item)
-    if symlinks and os.path.islink(s):
-      if os.path.lexists(d):
-        os.remove(d)
-      os.symlink(os.readlink(s), d)
-      try:
-        st = os.lstat(s)
-        mode = stat.S_IMODE(st.st_mode)
-        os.lchmod(d, mode)
-      except:
-        pass # lchmod not available
-    elif os.path.isdir(s):
-      copytree(s, d, symlinks, ignore)
-    else:
-      shutil.copy2(s, d)
+	if not os.path.exists(dst):
+		os.makedirs(dst)
+		shutil.copystat(src, dst)
+	lst = os.listdir(src)
+	if ignore:
+		excl = ignore(src, lst)
+		lst = [x for x in lst if x not in excl]
+	for item in lst:
+		s = os.path.join(src, item)
+		d = os.path.join(dst, item)
+		if symlinks and os.path.islink(s):
+			if os.path.lexists(d):
+				os.remove(d)
+			os.symlink(os.readlink(s), d)
+			try:
+				st = os.lstat(s)
+				mode = stat.S_IMODE(st.st_mode)
+				os.lchmod(d, mode)
+			except:
+				pass # lchmod not available
+		elif os.path.isdir(s):
+			copytree(s, d, symlinks, ignore)
+		else:
+			shutil.copy2(s, d)
 
 #http://stackoverflow.com/a/22881871/263449
 def get_script_dir(follow_symlinks=True):
-    if getattr(sys, 'frozen', False): # py2exe, PyInstaller, cx_Freeze
-        path = os.path.abspath(sys.executable)
-    else:
-        path = inspect.getabsfile(get_script_dir)
-    if follow_symlinks:
-        path = os.path.realpath(path)
-    return os.path.dirname(path)
+	if getattr(sys, 'frozen', False): # py2exe, PyInstaller, cx_Freeze
+		path = os.path.abspath(sys.executable)
+	else:
+		path = inspect.getabsfile(get_script_dir)
+	if follow_symlinks:
+		path = os.path.realpath(path)
+	return os.path.dirname(path)
 
 
 def generatePhrase(numWords):
 	phrase = re.compile("[0-9]+\t(.*)")
-
 
 	path_to_diceware = resource_filename("FactoryFactotum", "diceware.wordlist.asc")
 
@@ -96,30 +95,24 @@ def generatePhrase(numWords):
 
 
 def newFactorioMap():
-	if not os.path.isfile("%s/config/mapsettings.json" % (FACTORIOPATH) ):
-		with open("%s/config/mapsettings.json" % (FACTORIOPATH), 'w') as mapsettingsfile:
-			map="""{
-  "_comment": "Sizes can be specified as none, very-low, low, normal, high, very-high",
+	FACTORIOPATH = getFactorioPath()
 
-  "terrain_segmentation": "normal",
-  "water": "normal",
-  "width": 0,
-  "height": 0,
-  "starting_area": "high",
-  "peaceful_mode": false,
-  "autoplace_controls":
-  {
-	"coal": {"frequency": "low", "size": "high", "richness": "very-high"},
-	"copper-ore": {"frequency": "low", "size": "high", "richness": "very-high"},
-	"crude-oil": {"frequency": "low", "size": "high", "richness": "very-high"},
-	"enemy-base": {"frequency": "low", "size": "very-high", "richness": "very-high"},
-	"iron-ore": {"frequency": "low", "size": "high", "richness": "very-high"},
-	"stone": {"frequency": "low", "size": "high", "richness": "very-high"}
-  }
-}"""
-			mapsettingsfile.write(map)
-			mapsettingsfile.close()
+	mapFileExamplePath="%s/data/map-gen-settings.example.json" % (FACTORIOPATH)
+	mapFilePath="%s/config/mapsettings.json" % (FACTORIOPATH)
 
+	if not os.path.isfile(mapFilePath):		
+		with codecs.open(mapFileExamplePath, 'r', encoding='utf-8') as map_file:
+			mapJson = json.load(map_file)
+	
+			mapJson['starting_area'] = "very-high"
+
+			for control in mapJson['autoplace_controls']:
+				mapJson['autoplace_controls'][control]['size'] = "high"
+				mapJson['autoplace_controls'][control]['richness'] = "very-high"
+				mapJson['autoplace_controls'][control]['frequency'] = "low"
+
+		with codecs.open(mapFilePath, 'w', encoding='utf-8') as map_file:
+			json.dump(mapJson, map_file, indent=4)
 
 
 	print(subprocess.check_output(
@@ -129,9 +122,18 @@ def newFactorioMap():
 					 ).decode("unicode_escape"))
 
 
-	
+def getSettingsFile():
+	FACTORIOPATH = getFactorioPath()
+
+	if os.path.isfile("%s/config/settings.json" % (FACTORIOPATH)):
+		settingsFilePath="%s/config/settings.json" % (FACTORIOPATH)
+	else:
+		settingsFilePath="%s/data/server-settings.example.json" % (FACTORIOPATH)	
+	return settingsFilePath
 
 def updateFactorio():
+	FACTORIOPATH = getFactorioPath()
+
 	file_name = "/tmp/latestFactorio.tar.gz"
 	print("Downloading %s" % file_name)
 
@@ -160,17 +162,14 @@ def updateFactorio():
 
 
 
-
-
-
-try:
-	with open("%s/.factorioPath" % (expanduser("~")), "r") as data_file:
-		FACTORIOPATH = data_file.readline().strip()
-except:
-	print("%s/.factorioPath not found. Using default." % (expanduser("~")))
-	FACTORIOPATH = "/opt/factorio"
-
-
+def getFactorioPath():
+	try:
+		with open("%s/.factorioPath" % (expanduser("~")), "r") as data_file:
+			path = data_file.readline().strip()
+	except:
+		print("%s/.factorioPath not found. Using default." % (expanduser("~")))
+		path = "/opt/factorio"
+	return path
 
 
 @click.group()
@@ -180,6 +179,9 @@ def passwordClick():
 @passwordClick.command()
 def password():
 	"""Get the server game password"""
+
+	FACTORIOPATH = getFactorioPath()
+
 	try:
 		with codecs.open("%s/config/settings.json" % (FACTORIOPATH), 'r+', encoding='utf-8') as settings_file:
 			settingsJson = json.load(settings_file)
@@ -221,16 +223,30 @@ def daemonClick():
 
 def factorio():
 	"""Factotum for Factorio server stuff. Runs the server. Start with `factorio start`. Help with `factorio --help`."""
+	FACTORIOPATH = getFactorioPath()
 
 	phrase = generatePhrase(6)
 	with open("/tmp/factorioRcon", "w") as phraseFile:
 		phraseFile.write(phrase)
 
+	with codecs.open("%s/config/settings.json" % (FACTORIOPATH), 'r+', encoding='utf-8') as settings_file:
+		try:
+			settingsJson = json.load(settings_file)
+		except Exception as e:
+			print("Problem with settings file.")
+			print(e)
+			sys.exit(1)
+
+
+	if not filter(os.path.isfile, glob.glob('%s/saves/*.zip' % (FACTORIOPATH))):
+		print("Cannot find a save file. Exiting.")
+		sys.exit(1)
+
 	myprogram = {"cmd": "%s/bin/x64/factorio --rcon-port 27015 --rcon-password \"%s\" --start-server-load-latest --server-settings %s/config/settings.json" % (FACTORIOPATH, phrase, FACTORIOPATH) , "numprocesses": 1}
 
 	arbiter = get_arbiter([myprogram])
 	try:
-	    arbiter.start()
+			arbiter.start()
 	finally:
 		os.remove("/tmp/factorioRcon")
 		arbiter.stop()
@@ -243,6 +259,8 @@ def updateClick():
 @updateClick.command()
 def update():
 	"""Download and unpack latest factorio."""
+	FACTORIOPATH = getFactorioPath()
+
 	if os.path.isdir("%s" % (FACTORIOPATH) ): 
 		updateFactorio()
 	else:
@@ -269,6 +287,8 @@ def installClick():
 @updateClick.command()
 def install():
 	"""Create the FACTORIOPATH directory, then download and unpack factorio.""" 
+	FACTORIOPATH = getFactorioPath()
+
 	try:
 		if not os.path.isdir("%s" % (FACTORIOPATH) ):
 			os.mkdir(FACTORIOPATH, 0o755)
@@ -288,8 +308,8 @@ def settingsClick():
 	pass
 
 @settingsClick.command()
-@click.option('--servername', prompt=True, help="Name of the server for public listings.")
-@click.option('--description', prompt=True,  help="Description of the server for public listings.")
+@click.option('--servername', help="Name of the server for public listings.")
+@click.option('--description',  help="Description of the server for public listings.")
 @click.option('--visibility', default="public", help="Default: public. public/lan/hidden")
 @click.option('--serverpassword', help='To set the server password')
 @click.option('--genServerPasswordWords','-g', default=4, help='Default 4. Generate a random password with this many words.')
@@ -297,10 +317,10 @@ def settingsClick():
 
 def setup(servername, description, tag, visibility, serverpassword, genserverpasswordwords):
 	"""Setup tasks for deploying a server."""
+	FACTORIOPATH = getFactorioPath()
 	
 	
-	tags = [str(x) for x in tag]
-	print(servername, description, tags, visibility, serverpassword, genserverpasswordwords)
+	tags = [str(x) for x in tag]	
 
 	if serverpassword:
 		password=serverpassword
@@ -312,7 +332,7 @@ def setup(servername, description, tag, visibility, serverpassword, genserverpas
 	print("The server password is: \"%s\" " % password)
 
 	try:
-		with codecs.open("%s/config/settings.json" % (FACTORIOPATH), 'r+', encoding='utf-8') as settings_file:
+		with codecs.open(getSettingsFile(), 'r+', encoding='utf-8') as settings_file:
 
 			settingsJson = json.load(settings_file)
 			if servername:
@@ -326,40 +346,12 @@ def setup(servername, description, tag, visibility, serverpassword, genserverpas
 			settingsJson["game_password"] = password
 			settingsJson['visibility'] = visibility
 			
-			settings_file.seek(0)
-			json.dump(settingsJson, settings_file, indent=4)
+			
+		with codecs.open("%s/config/settings.json" % (FACTORIOPATH), 'w', encoding='utf-8') as settingsFile:
+			json.dump(settingsJson, settingsFile, indent=4)
 
-	except (ValueError, IOError) as e:
-		
-		updated_settings="""{
-  "name": "%s",
-  "description": "%s",
-  "tags": %s,
-  "max_players": "0",
-
-  "_comment_visibility": ["public: Game will be published on the official Factorio matching server - test",
-						  "lan: Game will be broadcast on LAN",
-						  "hidden: Game will not be published anywhere"],
-  "visibility": "%s",
-
-  "_comment_credentials": "Your factorio.com login credentials. Required for games with visibility public",
-  "username": "",
-  "password": "",
-
-  "_comment_token": "Authentication token. May be used instead of 'password' above.",
-  "token": "",
-
-  "game_password": "%s",
-
-  "_comment_verify_user_identity": "When set to true, the server will only allow clients that have a valid Factorio.com account",
-  "verify_user_identity": true,
-  "_commend_max_upload_in_kilobytes_per_second" : "optional, default value is 0. 0 means unlimited.",
-  "max_upload_in_kilobytes_per_second": 0
-}
-""" % (servername or "Headless factorio server", description or "Headless factorio server generated by denubis' scripts", "[\"%s\"]" % ('","'.join(tags)), visibility, password)
-		with open("%s/config/settings.json" % (FACTORIOPATH), 'w') as settings_file:
-			settings_file.write(updated_settings)
-			settings_file.close()
+	except:
+		print("Cannot write settings file.")
 
 @click.group()
 def authClick():
@@ -371,114 +363,79 @@ def authClick():
 
 def authenticate(username, password):
 	"""Save an authentication token from factorio"""
+	FACTORIOPATH = getFactorioPath()
+
 	print("Fetching token for %s" %  (username))
 	if not os.path.isfile("%s/bin/x64/factorio" % (FACTORIOPATH) ):
 		print("Could not find factorio at %s" % (FACTORIOPATH))
 		sys.exit(1)
-	else:
-		settings="""{
-  "name": "Name of the game as it will appear in the game listing",
-  "description": "Description of the game that will appear in the listing",
-  "tags": ["game", "tags"],
-  "max_players": "0",
+	
+	try:
+		f = tempfile.NamedTemporaryFile(mode='w')
 
-  "_comment_visibility": ["public: Game will be published on the official Factorio matching server",
-						  "lan: Game will be broadcast on LAN",
-						  "hidden: Game will not be published anywhere"],
-  "visibility": "hidden",
 
-  "_comment_credentials": "Your factorio.com login credentials. Required for games with visibility public",
-  "username": "%s",
-  "password": "%s",
-
-  "_comment_token": "Authentication token. May be used instead of 'password' above.",
-  "token": "",
-
-  "game_password": "",
-
-  "_comment_verify_user_identity": "When set to true, the server will only allow clients that have a valid Factorio.com account",
-  "verify_user_identity": true,
-  "_commend_max_upload_in_kilobytes_per_second" : "optional, default value is 0. 0 means unlimited.",
-  "max_upload_in_kilobytes_per_second": 0
-}
-""" % (username, password)
 		try:
-			f = tempfile.NamedTemporaryFile(mode='w')
-			f.write(settings)
-			f.seek(0)
-			#print f.read()
-			print("Settings file: %s" % (f.name))
-
-			print(subprocess.check_output(
-					["%s/bin/x64/factorio" % (FACTORIOPATH), 
-					 "--create", "%s/saves/AuthenticateMap" % (FACTORIOPATH)]
-					 ).decode("unicode_escape"))
-
-
-			print("Briefly loading server...")
-
-
-
-			auth = subprocess.Popen(
-					["%s/bin/x64/factorio" % (FACTORIOPATH), 
-					 "--start-server", "%s/saves/AuthenticateMap.zip" % (FACTORIOPATH),
-					 "--server-settings", f.name
-					 ], stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True
-					 )
-
+			with codecs.open(getSettingsFile(), 'r+', encoding='utf-8') as settings_file:
+				settingsJson = json.load(settings_file)
+				settingsJson['username'] = username
+				settingsJson['password'] = password
 			
-			time.sleep(5)
-			outs, errs = auth.communicate(input="/quit\n")
-			print(outs)
+			json.dump(settingsJson, f, indent=4)
+		except Exception as e:
+			print(e)
+			print("Help! Can't deal with the temp settings file!")
+			sys.exit(1)
+
+
+		f.seek(0)
+		#print f.read()
+		print("Settings file: %s" % (f.name))
+
+		print(subprocess.check_output(
+				["%s/bin/x64/factorio" % (FACTORIOPATH), 
+				 "--create", "%s/saves/AuthenticateMap" % (FACTORIOPATH)]
+				 ).decode("unicode_escape"))
+
+
+		print("Briefly loading server...")
+
+
+
+		auth = subprocess.Popen(
+				["%s/bin/x64/factorio" % (FACTORIOPATH), 
+				 "--start-server", "%s/saves/AuthenticateMap.zip" % (FACTORIOPATH),
+				 "--server-settings", f.name
+				 ], stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True
+				 )
+
 		
+		time.sleep(5)
+		outs, errs = auth.communicate(input="/quit\n")
+		print(outs)
+	
+		
+		
+		with open("%s/player-data.json" % (FACTORIOPATH), 'r+') as data_file:
+			data = json.load(data_file)
+
+		print(data['service-username'], data['service-token'])
+
+
+		try:
+			with codecs.open(getSettingsFile(), 'r+', encoding='utf-8') as settings_file:
+				settingsJson = json.load(settings_file)
+				settingsJson['token'] = data['service-token']
+				settingsJson['username'] = data['service-username']
 			
-			
-			with open("%s/player-data.json" % (FACTORIOPATH), 'r+') as data_file:
-				data = json.load(data_file)
+			with codecs.open("%s/config/settings.json" % (FACTORIOPATH), 'w', encoding='utf-8') as settings_file:
+				json.dump(settingsJson, settings_file, indent=4)
+		except (ValueError, IOError):
+			print("Help! Can't deal with the settings file!")
 
-			print(data['service-username'], data['service-token'])
 
 
-			try:
-				with codecs.open("%s/config/settings.json" % (FACTORIOPATH), 'a+', encoding='utf-8') as settings_file:
-					settingsJson = json.load(settings_file)
-					settingsJson['token'] = data['service-token']
-					settingsJson['username'] = data['service-username']
-					settings_file.seek(0)
-					json.dump(settingsJson, settings_file, indent=4)
-			except (ValueError, IOError):
-				updated_settings="""{
-  "name": "Name of the game as it will appear in the game listing",
-  "description": "Description of the game that will appear in the listing",
-  "tags": ["game", "tags"],
-  "max_players": "0",
-
-  "_comment_visibility": ["public: Game will be published on the official Factorio matching server",
-						  "lan: Game will be broadcast on LAN",
-						  "hidden: Game will not be published anywhere"],
-  "visibility": "hidden",
-
-  "_comment_credentials": "Your factorio.com login credentials. Required for games with visibility public",
-  "username": "%s",
-  "password": "",
-
-  "_comment_token": "Authentication token. May be used instead of 'password' above.",
-  "token": "%s",
-
-  "game_password": "",
-
-  "_comment_verify_user_identity": "When set to true, the server will only allow clients that have a valid Factorio.com account",
-  "verify_user_identity": true,
-  "_commend_max_upload_in_kilobytes_per_second" : "optional, default value is 0. 0 means unlimited.",
-  "max_upload_in_kilobytes_per_second": 0
-}
-""" % (data['service-username'], data['service-token'])
-				with codecs.open("%s/config/settings.json" % (FACTORIOPATH), 'a+') as settings_file:
-					settings_file.write(updated_settings)
-					settings_file.close()
-
-		finally:
-			f.close()
+	finally:
+		f.close()
 
 
 
