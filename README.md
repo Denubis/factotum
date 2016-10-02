@@ -5,7 +5,7 @@ By: Brian Ballsun-Stanton and James Zhao
 
 Installation:
 
-* ```sudo apt update && sudo apt install python3-pip -y && sudo pip3 install FactoryFactotum```
+* ```sudo apt update && sudo apt install python3-pip -y && sudo pip3 install FactoryFactotum && sudo mkdir -p /opt/factorio && sudo chown $USER /opt/factorio && FactoryFactotum install && source $HOME/.bashrc && echo /opt/factorio > $HOME/.factorioPath```	
 
 Usage:
 

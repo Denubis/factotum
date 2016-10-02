@@ -35,6 +35,7 @@ from circus import get_arbiter
 import inspect
 import asyncio
 from factoirc.rcon import RconConnection
+from pkg_resources import resource_filename, Requirement
 
 
 
@@ -82,12 +83,11 @@ def get_script_dir(follow_symlinks=True):
 
 def generatePhrase(numWords):
 	phrase = re.compile("[0-9]+\t(.*)")
-	
-	__location__ = get_script_dir()
 
-	print(__location__)
 
-	with open(os.path.join(__location__, 'diceware.wordlist.asc')) as diceware:
+	path_to_diceware = resource_filename("FactoryFactotum", "diceware.wordlist.asc")
+
+	with open(path_to_diceware, "r") as diceware:
 		password = diceware.readlines()
 		password = [m.group(1) for l in password for m in [phrase.search(l)] if m]
 		random.SystemRandom().shuffle(password)
