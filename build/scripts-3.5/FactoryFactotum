@@ -300,10 +300,8 @@ def install():
 			os.mkdir(os.path.join(FACTORIOPATH, "saves"))
 			with open("%s/.bashrc" % (expanduser("~")), "r+") as bashrc:
 				lines = bashrc.read()
-				bashrc.seek(0)
-				print("ok")
-				print(lines.find("eval \"$(_FACTORYFACTOTUM_COMPLETE=source FactoryFactotum)\"\n"))
-				if not lines.find("eval \"$(_FACTORYFACTOTUM_COMPLETE=source FactoryFactotum)\"\n"):
+				
+				if lines.find("eval \"$(_FACTORYFACTOTUM_COMPLETE=source FactoryFactotum)\"\n") == -1:
 					bashrc.write("eval \"$(_FACTORYFACTOTUM_COMPLETE=source FactoryFactotum)\"\n")
 					print("You'll want to restart your shell for command autocompletion. Tab is your friend.")
 		updateFactorio()
