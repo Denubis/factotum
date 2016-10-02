@@ -1,0 +1,34 @@
+Metadata-Version: 1.1
+Name: FactoryFactotum
+Version: 0.0.4
+Summary: A tool to control a headless factorio server.
+Home-page: https://pypi.python.org/pypi/FactoryFactotum
+Author: Brian Ballsun-Stanton
+Author-email: factorio@drbbs.org
+License: GPLv3
+Description: # Headless Factorio Server Scripts
+        Scripts for a headless factorio
+        By: Brian Ballsun-Stanton and James Zhao
+        
+        Usage:
+        
+        * `headlessFactorio/setupFactotum.sh`
+           * This deploys necessary packages onto the server, installs factorio to /opt/factorio (put alternate path in factorioPath.conf if necessary), gets the authentication token, provides basic data to the server config file and sets a random password, and generates a fresh map.
+        * `headlessFactorio/doIt.sh`
+           * This updates the server and then runs FactoryFactotum factorio start
+        * `headlessFactorio/FactoryFactotum --help`
+           * This provides all Factory Factotum commands.
+        * `headlessFactorio/FactoryFactotum factorio start`
+           * This starts the factorio headless server in daemon mode with latest save.
+        * `headlessFactorio/FactoryFactotum factorio stop`
+           * This asks the headless server to stop. Politely. It will take some time and will likely report failed.
+        * `headlessFactorio/FactoryFactotum factorio status`
+           * This reports on the status of the server.            
+        
+        
+        
+Keywords: factorio rcon headless
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Topic :: Games/Entertainment :: Simulation
+Classifier: License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)

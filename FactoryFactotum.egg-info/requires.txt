@@ -1,0 +1,7 @@
+click
+ptyprocess
+clint
+circus
+daemonocle
+requests
+python-valve

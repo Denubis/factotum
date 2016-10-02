@@ -1,0 +1,3 @@
+include FactoryFactotum/diceware.wordlist.asc
+include FactoryFactotum/
+include README.md
