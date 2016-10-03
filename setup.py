@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
     name = "factotum",
-    version = "0.0.18",
+    version = "0.0.19",
     author = "Brian Ballsun-Stanton",
     author_email = "factorio@drbbs.org",
     description = ("A tool to control a headless factorio server."),
@@ -28,7 +28,7 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'factotum=factotum.factotum:cli'
+            'factotum=factotum:cli'
         ]
     }
 
