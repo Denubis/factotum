@@ -183,8 +183,9 @@ def getPassword():
 	FACTORIOPATH = getFactorioPath()
 
 	try:
-		with codecs.open("%s/config/settings.json" % (FACTORIOPATH), 'r+', encoding='utf-8') as settings_file:
-			settingsJson = json.load(settings_file)
+
+		with codecs.open("%s/config/settings.json" % (FACTORIOPATH), 'r', encoding='utf-8') as settings_file:
+			settingsJson = json.load(settings_file)			
 			return settingsJson["game_password"]
 
 	except Exception as e:
@@ -369,7 +370,7 @@ def factorio():
 @click.command()
 def password():
 	"""Get the server game password"""
-	return("The server password is: \"%s\" " % getPassword())
+	return("The server password is: \"%s\" " % (getPassword()))
 
 
 @click.argument("cmd", nargs=-1)	
@@ -430,6 +431,7 @@ def authenticate(username, password):
 @click.command()
 @click.option('--genServerPasswordWords','-g', default=4, help='Default 4. Generate a random password with this many words.')
 def diceware(genserverpasswordwords):
+	"""Generates a diceware password for the user."""
 	print(generatePhrase(genserverpasswordwords))
 
 @click.command()
