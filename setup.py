@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
     name = "factotum",
-    version = "0.0.19",
+    version = "0.0.25",
     author = "Brian Ballsun-Stanton",
     author_email = "factorio@drbbs.org",
     description = ("A tool to control a headless factorio server."),
@@ -18,6 +18,7 @@ setup(
     keywords = "factorio rcon headless",
     url = "https://github.com/Denubis/factotum",
     py_modules=['factotum'],
+    packages = find_packages(),
     long_description=read('README.md'),
     classifiers=[
         "Development Status :: 3 - Alpha",
@@ -28,7 +29,7 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'factotum=factotum:cli'
+            'factotum=factotum.factotum:cli'
         ]
     }
 
