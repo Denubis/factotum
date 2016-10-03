@@ -9,15 +9,15 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
-    name = "FactoryFactotum",
-    version = "0.0.17",
+    name = "factotum",
+    version = "0.0.18",
     author = "Brian Ballsun-Stanton",
     author_email = "factorio@drbbs.org",
     description = ("A tool to control a headless factorio server."),
     license = "GPLv3",
     keywords = "factorio rcon headless",
-    url = "https://github.com/Denubis/headlessFactorio",
-    packages=['FactoryFactotum'],
+    url = "https://github.com/Denubis/factotum",
+    py_modules=['factotum'],
     long_description=read('README.md'),
     classifiers=[
         "Development Status :: 3 - Alpha",
@@ -28,7 +28,7 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'FactoryFactotum=FactoryFactotum:cli'
+            'factotum=factotum.factotum:cli'
         ]
     }
 
