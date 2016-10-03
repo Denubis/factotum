@@ -1,11 +1,8 @@
-#!/usr/bin/env python3
-'''
+"""
 FactoryFactoum -- a CLI for managing the headless linux factorio server
 By: Brian Ballsun-Stanton
 GPL v3
-
-'''
-
+"""
 
 import time
 
@@ -40,6 +37,8 @@ import glob
 import stat
 from requests.auth import HTTPDigestAuth
 import urllib
+
+
 
 FACTORIOPATH = "/opt/factorio"
 DOWNLOADURL = "https://www.factorio.com/get-download/latest/headless/linux64"
@@ -410,18 +409,3 @@ def authenticate(username, password):
 		print(e)
 		print("Help! Can't deal with the settings file!")
 
-
-		
-cli.add_command(password)
-cli.add_command(factorio)
-cli.add_command(rcon)
-cli.add_command(update)
-cli.add_command(newMap)
-cli.add_command(install)
-cli.add_command(setup)
-cli.add_command(authenticate)
-
-
-
-if __name__ == '__main__':
-	cli()    
