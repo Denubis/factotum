@@ -189,7 +189,7 @@ def getPassword():
 			return settingsJson["game_password"]
 
 	except Exception as e:
-		print("Unable to read settings.json. Error %s" % (e))
+		return "Unable to read settings.json. Error %s" % (e)
 
 
 def rconCmd(cmd):
@@ -370,7 +370,7 @@ def factorio():
 @click.command()
 def password():
 	"""Get the server game password"""
-	return("The server password is: \"%s\" " % (getPassword()))
+	print("The server password is: \"%s\" " % (getPassword()))
 
 
 @click.argument("cmd", nargs=-1)	
