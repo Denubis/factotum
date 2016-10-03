@@ -38,7 +38,8 @@ from factoirc.rcon import RconConnection
 from pkg_resources import resource_filename, Requirement
 import glob
 import stat
-import mmap
+from requests.auth import HTTPDigestAuth
+import urllib
 
 FACTORIOPATH = "/opt/factorio"
 DOWNLOADURL = "https://www.factorio.com/get-download/latest/headless/linux64"
@@ -298,6 +299,7 @@ def install():
 		if not os.path.isdir("%s" % (FACTORIOPATH) ):
 			os.mkdir(FACTORIOPATH, 0o755)
 			os.mkdir(os.path.join(FACTORIOPATH, "saves"))
+			os.mkdir(os.path.join(FACTORIOPATH, "config"))
 			with open("%s/.bashrc" % (expanduser("~")), "r+") as bashrc:
 				lines = bashrc.read()
 				
@@ -322,25 +324,31 @@ def settingsClick():
 @click.option('--serverpassword', help='To set the server password')
 @click.option('--genServerPasswordWords','-g', default=4, help='Default 4. Generate a random password with this many words.')
 @click.option('--tag','-t', help="Tags for the server list.", multiple=True)
+@click.option('--admins','-a', help="Set default admin names.", multiple=True)
+@click.option('--ignorePlayerLimit/--noIgnorePlayerLimit', help="Enable/Disable ignore Player Limit for returing players.")
+@click.option('--afk', help='Set the afk timeout in minutes')
+@click.option('--uploadrate', help='Upload limit in kbps', type=click.INT)
+@click.option('--UpdatePassword/--noUpdatePassword', '-u/-n', help="Don't change the json password", default=True)
 
-def setup(servername, description, tag, visibility, serverpassword, genserverpasswordwords):
+
+
+def setup(servername, description, tag, visibility, serverpassword, genserverpasswordwords, admins, ignoreplayerlimit, afk, uploadrate, updatepassword):
 	"""Setup tasks for deploying a server."""
 	FACTORIOPATH = getFactorioPath()
 	
 	
-	tags = [str(x) for x in tag]	
+	if updatepassword:
+		if serverpassword:
+			password=serverpassword
+		elif genserverpasswordwords > 0:
+			password=generatePhrase(genserverpasswordwords)
+		else:
+			password=""
 
-	if serverpassword:
-		password=serverpassword
-	elif genserverpasswordwords > 0:
-		password=generatePhrase(genserverpasswordwords)
-	else:
-		password=""
-
-	print("The server password is: \"%s\" " % password)
+		print("The server password is: \"%s\" " % password)
 
 	try:
-		with codecs.open(getSettingsFile(), 'r+', encoding='utf-8') as settings_file:
+		with codecs.open(getSettingsFile(), 'r', encoding='utf-8') as settings_file:
 
 			settingsJson = json.load(settings_file)
 			if servername:
@@ -348,10 +356,17 @@ def setup(servername, description, tag, visibility, serverpassword, genserverpas
 			if description:
 				settingsJson['description'] = description
 			if tag:
-				settingsJson['tags'] = tags
-
-
-			settingsJson["game_password"] = password
+				settingsJson['tags'] = tag
+			if admins:
+				settingsJson['admins'] = admins
+			if ignoreplayerlimit:
+				settingsJson['ignore_player_limit_for_returning_players'] = ignoreplayerlimit
+			if afk:
+				settingsJson['afk_autokick_interval'] = afk
+			if uploadrate:
+				settingsJson['max_upload_in_kilobytes_per_second'] = uploadrate
+			if updatepassword:
+				settingsJson["game_password"] = password
 			settingsJson['visibility'] = visibility
 			
 			
@@ -373,79 +388,47 @@ def authenticate(username, password):
 	"""Save an authentication token from factorio"""
 	FACTORIOPATH = getFactorioPath()
 
-	print("Fetching token for %s" %  (username))
+	url = "https://auth.factorio.com/api-login"
+	params = {'username': username, 'password': password, 'apiVersion': 2}
+
+
 	if not os.path.isfile("%s/bin/x64/factorio" % (FACTORIOPATH) ):
 		print("Could not find factorio at %s" % (FACTORIOPATH))
 		sys.exit(1)
+
+
+	print("Fetching token for %s" %  (username))
+	myResponse = requests.post(url,data=params, verify=True)
+	if(myResponse.ok):
+
+	    jData = json.loads(myResponse.text)
+	    print(jData[0])
+	    
+	else:
+	  # If response code is not ok (200), print the resulting http error code with description
+	    myResponse.raise_for_status()
+	    sys.exit(1)
 	
+
 	try:
-		f = tempfile.NamedTemporaryFile(mode='w')
+		with codecs.open(getSettingsFile(), 'r', encoding='utf-8') as settings_file:
+			settingsJson = json.load(settings_file)
+			settingsJson['token'] = jData[0]
+			settingsJson['username'] = username
+				
 
 
-		try:
-			with codecs.open(getSettingsFile(), 'r+', encoding='utf-8') as settings_file:
-				settingsJson = json.load(settings_file)
-				settingsJson['username'] = username
-				settingsJson['password'] = password
-			
-			json.dump(settingsJson, f, indent=4)
-		except Exception as e:
-			print(e)
-			print("Help! Can't deal with the temp settings file!")
-			sys.exit(1)
+		with codecs.open("%s/config/settings.json" % (FACTORIOPATH), 'w', encoding='utf-8') as settings_file:
+			json.dump(settingsJson, settings_file, indent=4)
+	except Exception as e:
+		print(e)
+		print("Help! Can't deal with the settings file!")
 
-
-		f.seek(0)
-		#print f.read()
-		print("Settings file: %s" % (f.name))
-
-		print(subprocess.check_output(
-				["%s/bin/x64/factorio" % (FACTORIOPATH), 
-				 "--create", "%s/saves/AuthenticateMap" % (FACTORIOPATH)]
-				 ).decode("unicode_escape"))
-
-
-		print("Briefly loading server...")
-
-
-
-		auth = subprocess.Popen(
-				["%s/bin/x64/factorio" % (FACTORIOPATH), 
-				 "--start-server", "%s/saves/AuthenticateMap.zip" % (FACTORIOPATH),
-				 "--server-settings", f.name
-				 ], stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True
-				 )
 
 		
-		time.sleep(5)
-		outs, errs = auth.communicate(input="/quit\n")
-		print(outs)
-	
+
+
 		
-		
-		with open("%s/player-data.json" % (FACTORIOPATH), 'r+') as data_file:
-			data = json.load(data_file)
-
-		print(data['service-username'], data['service-token'])
-
-
-		try:
-			with codecs.open(getSettingsFile(), 'r+', encoding='utf-8') as settings_file:
-				settingsJson = json.load(settings_file)
-				settingsJson['token'] = data['service-token']
-				settingsJson['username'] = data['service-username']
-			
-			with codecs.open("%s/config/settings.json" % (FACTORIOPATH), 'w', encoding='utf-8') as settings_file:
-				json.dump(settingsJson, settings_file, indent=4)
-		except (ValueError, IOError):
-			print("Help! Can't deal with the settings file!")
-
-
-
-	finally:
-		f.close()
-
-
 
 cli= click.CommandCollection(sources=[daemonClick, settingsClick, authClick, installClick, updateClick, mapClick, rconClick, passwordClick])
 

@@ -1,5 +1,5 @@
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 # Utility function to read the README file.
 # Used for the long_description.  It's nice, because now 1) we have a top level
@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
     name = "FactoryFactotum",
-    version = "0.0.16",
+    version = "0.0.17",
     author = "Brian Ballsun-Stanton",
     author_email = "factorio@drbbs.org",
     description = ("A tool to control a headless factorio server."),
@@ -26,7 +26,11 @@ setup(
     ],
     install_requires=["click", "ptyprocess", "clint", "circus", "daemonocle", "requests", "python-valve", "factoirc"],
     include_package_data=True,
-    scripts=['bin/FactoryFactotum'],
+    entry_points={
+        'console_scripts': [
+            'FactoryFactotum = FactoryFactotum:cli'
+        ]
+    }
 
 )
 

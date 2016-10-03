@@ -1,11 +1,9 @@
-#!/usr/bin/env python3
-'''
+
+"""
 FactoryFactoum -- a CLI for managing the headless linux factorio server
 By: Brian Ballsun-Stanton
 GPL v3
-
-'''
-
+"""
 
 import time
 
@@ -40,6 +38,8 @@ import glob
 import stat
 from requests.auth import HTTPDigestAuth
 import urllib
+
+
 
 FACTORIOPATH = "/opt/factorio"
 DOWNLOADURL = "https://www.factorio.com/get-download/latest/headless/linux64"
@@ -178,34 +178,20 @@ def getFactorioPath():
 	return path
 
 
-@click.group()
-def passwordClick():
-	pass
 
-@passwordClick.command()
-def password():
-	"""Get the server game password"""
-
+def getPassword():	
 	FACTORIOPATH = getFactorioPath()
 
 	try:
 		with codecs.open("%s/config/settings.json" % (FACTORIOPATH), 'r+', encoding='utf-8') as settings_file:
 			settingsJson = json.load(settings_file)
-			print("The server password is: \"%s\" " % settingsJson["game_password"])
+			return settingsJson["game_password"]
 
 	except Exception as e:
 		print("Unable to read settings.json. Error %s" % (e))
 
 
-@click.group()
-def rconClick():
-	pass
-
-@click.argument("cmd", nargs=-1)	
-
-@rconClick.command()
-def rcon(cmd):
-	"""Pass an rcon command to the server. Find out possible by saying rcon /help"""
+def rconCmd(cmd):
 	host = "localhost"
 	port = 27015
 
@@ -218,15 +204,26 @@ def rcon(cmd):
 		conn = RconConnection(host, port, phrase)
 		resp = loop.run_until_complete(conn.exec_command(cmd))
 		print(resp, end='')	
-		
+
+
+def safeUpdate():
+	FACTORIOPATH = getFactorioPath()
+
+	if os.path.isdir("%s" % (FACTORIOPATH) ): 
+		updateFactorio()
+	else:
+		print("Cannot update factorio. %s does not exist." % (FACTORIOPATH))
+		sys.exit(1)
+
+
 
 
 @click.group()
-def daemonClick():
+def cli():
 	pass
 
-@daemonClick.command(cls=DaemonCLI, daemon_params={'pidfile': '/tmp/factorio.pid'})
 
+@click.command(cls=DaemonCLI, daemon_params={'pidfile': '/tmp/factorio.pid'})
 def factorio():
 	"""Factotum for Factorio server stuff. Runs the server. Start with `factorio start`. Help with `factorio --help`."""
 	FACTORIOPATH = getFactorioPath()
@@ -258,39 +255,34 @@ def factorio():
 		arbiter.stop()
 
 
-@click.group()
-def updateClick():
-	pass
+@click.command()
+def password():
+	"""Get the server game password"""
+	return("The server password is: \"%s\" " % getPassword())
 
-@updateClick.command()
+
+@click.argument("cmd", nargs=-1)	
+
+@click.command()
+def rcon(cmd):
+	"""Pass an rcon command to the server. Find out possible by saying rcon /help"""
+	rconCmd(cmd)
+
+
+@click.command()
 def update():
 	"""Download and unpack latest factorio."""
-	FACTORIOPATH = getFactorioPath()
-
-	if os.path.isdir("%s" % (FACTORIOPATH) ): 
-		updateFactorio()
-	else:
-		print("Cannot update factorio. %s does not exist." % (FACTORIOPATH))
-		sys.exit(1)
+	safeUpdate()
 		
 
-
-@click.group()
-def mapClick():
-	pass
-
-@mapClick.command()
+@click.command()
 def newMap():
 	"""Generate a new map."""
 	newFactorioMap()
 		
 
 
-@click.group()
-def installClick():
-	pass
-
-@updateClick.command()
+@click.command()
 def install():
 	"""Create the FACTORIOPATH directory, then download and unpack factorio.""" 
 	FACTORIOPATH = getFactorioPath()
@@ -313,11 +305,7 @@ def install():
 	
 
 
-@click.group()
-def settingsClick():
-	pass
-
-@settingsClick.command()
+@click.command()
 @click.option('--servername', help="Name of the server for public listings.")
 @click.option('--description',  help="Description of the server for public listings.")
 @click.option('--visibility', default="public", help="Default: public. public/lan/hidden")
@@ -345,7 +333,7 @@ def setup(servername, description, tag, visibility, serverpassword, genserverpas
 		else:
 			password=""
 
-		print("The server password is: \"%s\" " % password)
+		
 
 	try:
 		with codecs.open(getSettingsFile(), 'r', encoding='utf-8') as settings_file:
@@ -373,14 +361,12 @@ def setup(servername, description, tag, visibility, serverpassword, genserverpas
 		with codecs.open("%s/config/settings.json" % (FACTORIOPATH), 'w', encoding='utf-8') as settingsFile:
 			json.dump(settingsJson, settingsFile, indent=4)
 
+		print("The server password is: \"%s\" " % getPassword())
+
 	except:
 		print("Cannot write settings file.")
 
-@click.group()
-def authClick():
-	pass
-
-@authClick.command()
+@click.command()
 @click.option('--username', prompt=True,  help="Name of the server for public listings.")
 @click.option('--password', prompt=True, hide_input=True, help="Description of the server for public listings.")
 
@@ -424,15 +410,3 @@ def authenticate(username, password):
 		print(e)
 		print("Help! Can't deal with the settings file!")
 
-
-		
-
-
-		
-
-cli= click.CommandCollection(sources=[daemonClick, settingsClick, authClick, installClick, updateClick, mapClick, rconClick, passwordClick])
-
-
-
-if __name__ == '__main__':
-	cli()    
