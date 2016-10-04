@@ -1,6 +1,6 @@
 # A Factotum for Headless Factorio!
 A python manager to deploy and run headless factorio servers.
-By: Brian Ballsun-Stanton and James Zhao
+By: Brian Ballsun-Stanton, Andrew Ardill, and James Zhao
 
 Released under the GPL v3 License, 2016.
 No warranty of any kind, folks.
