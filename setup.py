@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
     name = "factotum",
-    version = "0.0.27",
+    version = "0.0.28",
     author = "Brian Ballsun-Stanton",
     author_email = "factorio@drbbs.org",
     description = ("A tool to control a headless factorio server."),
