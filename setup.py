@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
     name = "factotum",
-    version = "0.0.28",
+    version = "0.1.0",
     author = "Brian Ballsun-Stanton",
     author_email = "factorio@drbbs.org",
     description = ("A tool to control a headless factorio server."),
@@ -25,7 +25,7 @@ setup(
         "Topic :: Games/Entertainment :: Simulation",
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     ],
-    install_requires=["click", "ptyprocess", "clint", "circus", "daemonocle", "requests", "python-valve", "factoirc"],
+    install_requires=["click", "ptyprocess", "clint", "circus", "daemonocle", "requests", "python-valve", "factoirc", "pyfakefs"],
     include_package_data=True,
     entry_points={
         'console_scripts': [
