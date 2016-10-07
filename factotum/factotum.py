@@ -25,13 +25,12 @@ from .newmap import newFactorioMap
 from .settings import configSetup, configAuthenticate, getPassword
 from .rcon import rconCmd
 
-
-
 def runFactorio(stdin=True):
-	if stdin:
-		print("Interactive mode enabled. Server can only be quit with ctrl-C. /quit will only restart the server.")
+
 	FACTORIOPATH = getFactorioPath()
 
+	if not stdin:
+		print("Interactive mode enabled. Server can only be quit with ctrl-C. /quit will only restart the server.")	
 	phrase = generatePhrase(6)
 	with open("/tmp/factorioRcon", "w") as phraseFile:
 		phraseFile.write(phrase)
@@ -49,10 +48,16 @@ def runFactorio(stdin=True):
 		print("Cannot find a save file. Exiting.")
 		sys.exit(1)
 
-	myprogram = {"cmd": "%s/bin/x64/factorio --rcon-port 27015 --rcon-password \"%s\" --start-server-load-latest --server-settings %s/config/settings.json" % (FACTORIOPATH, phrase, FACTORIOPATH) , "numprocesses": 1, "stop_timeout": 20, "close_child_stdin":stdin}
+	nohup="nohup "
+
+	if not stdin:
+		print(nohup)
+		nohup=""
+	myprogram = {"cmd": "%s%s/bin/x64/factorio --rcon-port 27015 --rcon-password \"%s\" --start-server-load-latest --server-settings %s/config/settings.json" % (nohup, FACTORIOPATH, phrase, FACTORIOPATH) , "numprocesses": 1, "stop_timeout": 20, "close_child_stdin":stdin}
 
 	arbiter = circus.get_arbiter([myprogram])
 	try:
+					
 		arbiter.start()
 	finally:
 		os.remove("/tmp/factorioRcon")
@@ -66,10 +71,7 @@ def cli():
 @click.command(cls=DaemonCLI, daemon_params={'pidfile': '/tmp/factorio.pid'})
 def factorio():
 	"""Factotum for Factorio server stuff. Runs the server. Start with `factorio start`. Help with `factorio --help`."""
-	runFactorio()
-		
-
-
+	runFactorio()		
 
 @click.command()
 def password():
@@ -163,8 +165,6 @@ def fulldeploy( username, password, servername, description, tag, admin):
 				uploadrate=None, 
 				updatepassword=True)
 	runFactorio(False)
-	
-	
 	
 
 @click.command()
