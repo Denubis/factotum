@@ -5,6 +5,7 @@ import requests
 import tarfile
 import subprocess
 import getpass
+import sys
 from clint.textui import progress
 
 from .factoriopath import getFactorioPath
