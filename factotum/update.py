@@ -69,19 +69,24 @@ def updateFactorio():
 				if chunk:
 					f.write(chunk)
 					f.flush()
+			os.chmod(f, stat.S_IWOTH)
 	else:
 		print("File already exists and file sizes match. Skipping download.")	
 
-	if os.path.isfile(file_name) and os.access(FACTORIOPATH, os.W_OK):
-		tar = tarfile.open(file_name, "r:gz")
-		tar.extractall(path="/tmp")
-		tar.close()
+	if os.access(FACTORIOPATH, os.W_OK):
+		if os.path.isfile(file_name) 
+			tar = tarfile.open(file_name, "r:gz")
+			tar.extractall(path="/tmp")
+			tar.close()
 
-		copytree("/tmp/factorio", FACTORIOPATH)
-		print("Success.")
+			copytree("/tmp/factorio", FACTORIOPATH)
+			print("Success.")
+		else:
+			print("Help! Can't find %s, but I should have!" % (file_name))
+			sys.exit(1)			
 	else:
-		print("Help! Can't find %s, but I should have!" % (file_name))
-		sys.exit(1)			
+		print("Can't write to %s" % (FACTORIOPATH))
+		sys.exit(1)
 
 def safeInstall():
 	FACTORIOPATH = getFactorioPath()
@@ -90,7 +95,7 @@ def safeInstall():
 		if not os.path.isdir("%s" % (FACTORIOPATH) ):		
 
 			if os.access("%s/.." % (FACTORIOPATH), os.W_OK):
-				os.mkdir(FACTORIOPATH, 0o755)
+				os.mkdir(FACTORIOPATH, 0o777)
 			else:
 				subprocess.call(['sudo', 'mkdir', '-p', FACTORIOPATH])
 				subprocess.call(['sudo', 'chown', getpass.getuser(), FACTORIOPATH])

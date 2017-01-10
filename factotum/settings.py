@@ -50,7 +50,8 @@ def configSetup(servername, description, tag, visibility, serverpassword, genser
 				settingsJson['max_upload_in_kilobytes_per_second'] = uploadrate
 			if updatepassword:
 				settingsJson["game_password"] = password
-			settingsJson['visibility'] = visibility
+			if visibility:
+				settingsJson['visibility'] = {"public":visibility, "lan": true}
 			
 			
 		with codecs.open("%s/config/settings.json" % (FACTORIOPATH), 'w', encoding='utf-8') as settingsFile:
