@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
     name = "factotum",
-    version = "0.1.2",
+    version = "0.1.3",
     author = "Brian Ballsun-Stanton",
     author_email = "factorio@drbbs.org",
     description = ("A tool to control a headless factorio server."),
@@ -21,7 +21,7 @@ setup(
     packages = find_packages(),
     long_description=read('README.md'),
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Topic :: Games/Entertainment :: Simulation",
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     ],
