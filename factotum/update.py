@@ -74,7 +74,7 @@ def updateFactorio():
 		print("File already exists and file sizes match. Skipping download.")	
 
 	if os.access(FACTORIOPATH, os.W_OK):
-		if os.path.isfile(file_name) 
+		if os.path.isfile(file_name):
 			tar = tarfile.open(file_name, "r:gz")
 			tar.extractall(path="/tmp")
 			tar.close()
