@@ -11,13 +11,13 @@ def getFactorioPath():
         with open("%s/.factorioPath" % (os.path.expanduser("~")), "r") as data_file:
             path = data_file.readline().strip()
     except:
-        print("%s/.factorioPath not found. Using default." % (expanduser("~")))
+        print("%s/.factorioPath not found. Using default." % (os.path.expanduser("~")))
         if os.path.isdir("/opt/factorio"):
             path = "/opt/factorio"
         elif os.access("/opt", os.W_OK):
             path = "/opt/factorio"
         else:
-            path = "%s/factorio" % (expanduser("~"))
+            path = "%s/factorio" % (os.path.expanduser("~"))
     return path
 
 if __name__ == "__main__":

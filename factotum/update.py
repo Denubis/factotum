@@ -69,7 +69,7 @@ def updateFactorio():
 				if chunk:
 					f.write(chunk)
 					f.flush()
-			os.chmod(f, stat.S_IWOTH)
+			os.chmod(file_name, stat.S_IWOTH)
 	else:
 		print("File already exists and file sizes match. Skipping download.")	
 
